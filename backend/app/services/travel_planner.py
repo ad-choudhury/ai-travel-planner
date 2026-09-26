@@ -1,15 +1,19 @@
 from app.models.trip import TripPlanRequest, TripPlanResponse
+from app.agents.destination_agent import DestinationAgent
 
 
 class TravelPlannerService:
-    """Application service.
+    """Coordinates the agents responsible for building a travel plan."""
 
-    This is intentionally lightweight in Stage 1. The multi-agent graph will
-    replace the placeholder response in a later stage.
-    """
+    def __init__(self):
+        self.destination_agent = DestinationAgent()
 
     def create_plan(self, request: TripPlanRequest) -> TripPlanResponse:
         nights = (request.end_date - request.start_date).days
+
+        destination_research = self.destination_agent.research(
+            request.destination
+        )
 
         trip = {
             "origin": request.origin,
@@ -22,8 +26,9 @@ class TravelPlannerService:
             "currency": request.currency.upper(),
             "interests": request.interests,
             "travel_style": request.travel_style,
+            "destination_research": destination_research,
             "agents": {
-                "destination": "pending",
+                "destination": "completed",
                 "transportation": "pending",
                 "accommodation": "pending",
                 "weather": "pending",
@@ -34,7 +39,7 @@ class TravelPlannerService:
         }
 
         return TripPlanResponse(
-            message="Trip request accepted. Multi-agent planning will be connected in the next stage.",
+            message="Destination research completed.",
             status="accepted",
             trip=trip,
         )
