@@ -1,5 +1,6 @@
 from app.models.trip import TripPlanRequest, TripPlanResponse
 from app.agents.destination_agent import DestinationAgent
+from app.agents.transportation_agent import TransportationAgent
 
 
 class TravelPlannerService:
@@ -7,11 +8,17 @@ class TravelPlannerService:
 
     def __init__(self):
         self.destination_agent = DestinationAgent()
+        self.transportation_agent = TransportationAgent()
 
     def create_plan(self, request: TripPlanRequest) -> TripPlanResponse:
         nights = (request.end_date - request.start_date).days
 
         destination_research = self.destination_agent.research(
+            request.destination
+        )
+
+        transportation_plan = self.transportation_agent.plan(
+            request.origin,
             request.destination
         )
 
@@ -27,9 +34,10 @@ class TravelPlannerService:
             "interests": request.interests,
             "travel_style": request.travel_style,
             "destination_research": destination_research,
+            "transportation_plan": transportation_plan,
             "agents": {
                 "destination": "completed",
-                "transportation": "pending",
+                "transportation": "completed",
                 "accommodation": "pending",
                 "weather": "pending",
                 "activities": "pending",
@@ -39,7 +47,7 @@ class TravelPlannerService:
         }
 
         return TripPlanResponse(
-            message="Destination research completed.",
+            message="Destination and transportation planning completed.",
             status="accepted",
             trip=trip,
         )
